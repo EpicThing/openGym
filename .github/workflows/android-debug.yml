@@ -20,6 +20,8 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@v3
+        with:
+          packages: ''
       - name: Web bundle + cap sync
         working-directory: frontend
         run: |
