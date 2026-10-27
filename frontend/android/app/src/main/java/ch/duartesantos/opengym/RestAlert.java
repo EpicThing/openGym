@@ -631,6 +631,25 @@ public final class RestAlert {
                 .build();
     }
 
+    private static Object speechFocus;
+
+    /** Coach phrases: turn the music down while the TTS speaks, the way a navigation prompt does. */
+    static synchronized void duckForSpeech(Context ctx) {
+        unduckSpeech(ctx);
+        AudioManager am = (AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE);
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build();
+        speechFocus = duck(am, attrs);
+    }
+
+    static synchronized void unduckSpeech(Context ctx) {
+        if (speechFocus == null) return;
+        unduck((AudioManager) ctx.getSystemService(Context.AUDIO_SERVICE), speechFocus);
+        speechFocus = null;
+    }
+
     /** Asks other apps to turn down for the tone. Returns what unduck needs, or null. */
     @SuppressWarnings("deprecation")
     private static Object duck(AudioManager am, AudioAttributes attrs) {

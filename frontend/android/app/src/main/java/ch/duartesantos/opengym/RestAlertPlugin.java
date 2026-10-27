@@ -138,6 +138,22 @@ public class RestAlertPlugin extends Plugin {
         call.resolve();
     }
 
+    /** Coach phrases: ask for transient audio focus with ducking before speaking, give it back after. */
+    @PluginMethod
+    public void duck(PluginCall call) {
+        Context ctx = getContext();
+        if (ctx == null) { call.reject("no context"); return; }
+        RestAlert.duckForSpeech(ctx.getApplicationContext());
+        call.resolve();
+    }
+
+    @PluginMethod
+    public void unduck(PluginCall call) {
+        Context ctx = getContext();
+        if (ctx != null) RestAlert.unduckSpeech(ctx.getApplicationContext());
+        call.resolve();
+    }
+
     @PluginMethod
     public void cancel(PluginCall call) {
         Context ctx = getContext();

@@ -13,6 +13,7 @@ import { dumbbellsOf } from '../lib/dumbbells.js'
 import { effortOf } from '../lib/history.js'
 import { figureOf } from '../lib/exercises.js'
 import { unlock, chime, playOnSilentSupported, vibrateSupported, appleTouchDevice } from '../lib/sound.js'
+import { loadPrefs, savePrefs, hasRussianVoice, coachSample } from '../lib/coach-voice.js'
 import { REST_SOUND_IDS, restSoundOf } from '../lib/rest-sounds.js'
 import { scheduleModeOf, chooseFixedWeek, chooseRotation } from '../lib/rotation.js'
 import { queueOf } from '../lib/queue.js'
@@ -611,6 +612,7 @@ export default function Settings({ page = null, find = null, via = null }) {
             <Switch checked={!!S.timerFlash} onChange={v => update(s => { s.timerFlash = v })} />
           </Row>
         </Section>
+        <CoachVoiceCard />
       </>
     },
 
@@ -1493,6 +1495,29 @@ function HealthConnectCard({ S, toast }) {
         title={t('Permission withdrawn. Tap to allow again')} accessory="chevron" onClick={turnOn} />}
       {h.on && <Row icon="list" iconTint="var(--blue)" title={t('Open Health Connect')}
         accessory="chevron" onClick={() => openHealthConnect().catch(() => {})} />}
+    </Section>
+  )
+}
+
+// Spoken coach phrases between sets (lib/coach-voice.js, phrases in lib/phrases.ru.json). Per device.
+function CoachVoiceCard() {
+  const [p, setP] = useState(loadPrefs)
+  const [ru, setRu] = useState(true)
+  useEffect(() => { hasRussianVoice().then(setRu) }, [])
+  const set = patch => setP(cur => { const n = { ...cur, ...patch }; savePrefs(n); return n })
+  const seg = (key, options) => <Segmented className="seg-inline" options={options.map(([value, label]) => ({ value, label }))} value={p[key]} onChange={v => set({ [key]: v })} />
+  return (
+    <Section footer={p.on && !ru ? 'Русский голос не найден. Установите его: Настройки Android → Язык и ввод → Синтез речи → Русский. Пока фразы молчат.' : 'Фразы можно править в phrases.ru.json.'}>
+      <Row icon="speaker" iconTint="var(--green)" title="Голос тренера" subtitle="Фраза в начале отдыха, музыка не останавливается">
+        <Switch checked={p.on} onChange={v => set({ on: v })} />
+      </Row>
+      {p.on && <>
+        <Row icon="repeat" iconTint="var(--green)" title="Как часто">{seg('every', [[1, 'Каждый'], [2, 'Каждый 2-й'], [3, 'Каждый 3-й']])}</Row>
+        <Row icon="speaker" iconTint="var(--green)" title="Скорость речи">{seg('rate', [[0.85, 'Медленно'], [1, 'Норма'], [1.2, 'Быстро']])}</Row>
+        <Row icon="speaker" iconTint="var(--green)" title="Громкость">{seg('volume', [[0.5, 'Тише'], [0.8, 'Средне'], [1, 'Громко']])}</Row>
+        <Row icon="house" iconTint="var(--green)" title="В домашних («Дом…»)"><Switch checked={p.home} onChange={v => set({ home: v })} /></Row>
+        <Row icon="speaker" iconTint="var(--green)" title="Проверить голос" accessory="chevron" onClick={() => coachSample(p)} />
+      </>}
     </Section>
   )
 }

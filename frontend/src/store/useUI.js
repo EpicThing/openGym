@@ -1,3 +1,4 @@
+import { coachRestStart, coachGetReady, coachStop } from '../lib/coach-voice.js'
 import { create } from 'zustand'
 import { uid } from '../lib/format.js'
 import { beep, chime, vibrate, alertBuzz } from '../lib/sound.js'
@@ -180,6 +181,7 @@ const runRest = (set, get) => {
       return
     }
     if (left <= 0) {
+      coachStop()
       if (seenLive) {
         // The Android alarm for this end stays quiet while the app is on screen, so this chime is
         // the only one. Locked, this branch never runs and the alarm's tone does.
@@ -198,6 +200,7 @@ const runRest = (set, get) => {
       set({ timer: { ...tm, left: 0, ready: true } })
       return
     }
+    if (left === 10) coachGetReady(tm)
     if (left <= 3) beep(snd, 660, 0.1)
     set({ timer: { ...tm, left } })
   }
@@ -295,6 +298,7 @@ export const useUI = create((set, get) => ({
     set({ timer: { left: sec, total: sec, endsAt, forIdx, ...(forSet != null ? { forSet } : {}), ...(kind === 'switch' ? { kind } : {}) } })
     bookRestEnd(endsAt, sec, kind)
     runRest(set, get)
+    coachRestStart(get().timer)
   },
   // Holding the rest where it is — a longer break than planned, a machine to wait for, a phone
   // call (#193). Paused time does not count: the countdown stops, and so does everything that
@@ -371,6 +375,7 @@ export const useUI = create((set, get) => ({
     runRest(set, get)
   },
   stopRest() {
+    coachStop()
     stopRestTicking()
     // Skip, Dismiss, a rest replacing this one and "rest off" all take the native alarm and
     // its notifications down with it, or the alert fires after the user already moved on.

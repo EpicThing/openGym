@@ -1,0 +1,37 @@
+name: Android debug APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [feature/coach-phrases]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Web bundle + cap sync
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build:mobile
+      - name: Build debug APK
+        working-directory: frontend/android
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openGym-coach-debug-apk
+          path: frontend/android/app/build/outputs/apk/debug/*.apk
+          retention-days: 30

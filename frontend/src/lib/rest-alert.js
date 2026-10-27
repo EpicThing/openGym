@@ -163,6 +163,15 @@ export function toneNative(kind) {
     .catch(() => false)
 }
 
+// Coach phrases (lib/coach-voice.js): transient audio focus with ducking around the speech, so
+// music turns down instead of stopping. No-op outside the Android app.
+export function duckSpeech(on) {
+  if (!MOBILE) return Promise.resolve()
+  return restPlugin()
+    .then(p => (p ? p.RestAlert[on ? 'duck' : 'unduck']().then(() => {}) : undefined))
+    .catch(() => {})
+}
+
 // The running countdown repaints with this swatch. No-op when no rest is on screen.
 export function setRestAccent(key) {
   if (!MOBILE) return
