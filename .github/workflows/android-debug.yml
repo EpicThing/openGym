@@ -27,6 +27,12 @@ jobs:
         run: |
           npm ci
           npm run build:mobile
+      - name: Stable signing key (same signature on every build)
+        env:
+          KS: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          mkdir -p ~/.android
+          echo "$KS" | base64 -d > ~/.android/debug.keystore
       - name: Build debug APK
         working-directory: frontend/android
         run: |
